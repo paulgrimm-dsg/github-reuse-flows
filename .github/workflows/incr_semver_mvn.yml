@@ -1,0 +1,25 @@
+name: 'Increment SemVer Maven'
+on: [workflow_call]
+
+jobs:
+  inspect-increment:
+    runs-on: [self-hosted, azure]
+    container: maven:3.8.3-jdk-11
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: run unit tests
+        run: mvn clean test
+
+      - name: update minor version
+        id: updateversion
+        run: .github/scripts/mvn_inc_minor.sh
+
+      - name: commit new minor version
+        run: |
+          echo "committing new version ${{ steps.updateversion.outputs.newversion }}"
+          git config --global user.name 'Paul Grimm'
+          git config --global user.email 'paul.grimm@dcsg.com'
+          git add pom.xml
+          git commit -m "${{ steps.updateversion.outputs.newversion }}"
+          git push
